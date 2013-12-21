@@ -1,6 +1,4 @@
 miscscripts
 ===========
 
-Misc Junk
-
-Test
+A repository of misc scripts, mostly for my recollection.
