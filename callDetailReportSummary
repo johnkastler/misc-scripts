@@ -1,5 +1,8 @@
 #!/bin/bash
 
+sqluser=
+sqlpass=
+
 if [[ -z $1 ]]
 then
 cat << EOF
@@ -11,7 +14,8 @@ usage: $0 [datestring] <email>
 OPTIONS:
 
   [datestring]  Required. e.g. 2013-12-17 or \$(date --date="1 day ago" +\%Y-\%m-\%d) for a nightly cronjob
-  <email>       Optional. Enter an email address to produce an email instead of displaying to standard out. Useful for a nightly cronjob
+  <email>       Optional. Enter an email address to produce an email instead of displaying to standard out.
+                Useful for a nightly cronjob
 
 EOF
 exit
@@ -21,7 +25,7 @@ function output() {
 echo "select calldate,clid,dst,duration,lastdata \
   from asteriskcdrdb.cdr where calldate like '$1%' and disposition='ANSWERED' and lastdata not like '%auto-confir%' \
   \G" \
-  | mysql -u user -p password
+  | mysql -u $sqluser -p $sqlpass
 } 
 
 if [[ -z $2 ]]
