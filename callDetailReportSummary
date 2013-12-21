@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [[ -z $1 ]]
+then
+cat << EOF
+
+A simple script to display, or optionally email, a brief summary of a given day's CDR.
+
+usage: $0 [datestring] <email>
+
+OPTIONS:
+
+  [datestring]  Required. e.g. 2013-12-17 or \$(date --date="1 day ago" +\%Y-\%m-\%d) for a nightly cronjob
+  <email>       Optional. Enter an email address to produce an email instead of displaying to standard out. Useful for a nightly cronjob
+
+EOF
+exit
+fi
+
+function output() {
+echo "select calldate,clid,dst,duration,lastdata \
+  from asteriskcdrdb.cdr where calldate like '$1%' and disposition='ANSWERED' and lastdata not like '%auto-confir%' \
+  \G" \
+  | mysql -u user -p password
+} 
+
+if [[ -z $2 ]]
+then
+  output $1
+else
+  output $1 | mail -s "Call Detail Report" $2
+fi
