@@ -1,0 +1,40 @@
+#!/bin/bash
+
+if [[ -z $1 || -z $2 ]]
+then
+cat << EOF
+
+A simple script to display, or optionally email, a breif output of the pages visited in a given day.
+
+usage: $0 [logfile] [datestring] <1>
+
+* Can only display as far back as the current log file for the given host. i.e. it won't pull data from rolled over log files
+* Works with standard Apache log files
+
+OPTIONS:
+
+  [logfile] Required. The full path of the http access log file that you want to review
+  [datestring]  Required. e.g. 2013-12-17 or \$(date --date="1 day ago" +\%Y-\%m-\%d) for a nightly cronjob
+  <email>   Optional. Enter an email address to produce an email instead of displaying to standard out. Useful for a nightly cronjob
+
+EOF
+exit
+fi
+
+function output() {
+grep $(date --date="$2" +%d/%b/%Y) $1 \
+  | grep -v "bot\|feedafever.com\|css\|Ezooms\|\/js\/\|favicon.png\|apple-touch-icon.png\|\ 301\ \|\ 302\ " \
+  | awk -F " " '{print $4 " " $1 " " $7}' \
+  | sed 's/\[//' \
+  | sed 's/google.*/google.com\"/' \
+  | sed 's/bing.*/bing.com\"/' \
+  | sed 's/https...\|http...//' \
+  | uniq
+}
+
+if [[ -z $3 ]]
+then
+  output $1 $2
+else
+  output $1 $2 | mail -s "$(basename $1)" $3
+fi
