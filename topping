@@ -1,0 +1,123 @@
+#!/bin/bash
+
+################ BEGIN EDIT ###############
+
+pc_chef_dir=
+website_src=
+production_dir=
+
+template()
+{
+cat << EOF
+---
+title: '$title'
+id: $this_post_id
+time: '`(date +%H:%M:%S)`'
+author: 
+pagecat: Blog
+tags: [draft, $tags]
+category: 
+---
+
+EOF
+}
+
+################# END EDIT ################
+
+post_dir="$website_src/_content/posts"
+prev_post=`ls -tr $post_dir | tail -1`
+prev_post_id=`grep -e 'id:' $post_dir/$prev_post`
+this_post_id=$(expr `echo $prev_post_id | sed 's/id..//'` + 1)
+
+bake()
+{
+  rm -rf $website_src/_cache/*
+  $pc_chef_dir/chef bake --root=$website_src
+#  rsync -a $website_src/_counter/ $production_dir/
+}
+
+edit()
+{
+case $1 in
+  list)
+    posts=(`ls $post_dir`)
+    for (( counter=0 ; counter < ${#posts[@]} ; counter++ ))
+    do
+      echo "$counter ) ${posts[$counter]}"
+    done
+
+    echo  
+    echo "Enter the number of the post you'd like to edit: "
+    echo
+    read edit_post_number
+  
+    vi $post_dir/${posts[$edit_post_number]}
+    ;;
+  *)
+    vi $post_dir/`ls $post_dir | tail -1`
+    ;;
+esac
+}
+
+post()
+{
+  echo -n "Post title: "
+    read title
+  echo -n "Tags: "
+    read tags
+
+  title_lc=`echo $title  | tr '[A-Z]' '[a-z]'`
+  filename=`(date +%Y-%m-%d)`_`echo $title_lc | sed 's/\ /-/g' | sed 's/,//g' | sed "s/'//g"`.html
+
+  template > "$post_dir/$filename"
+  vi $post_dir/$filename
+}
+
+purge ()
+{
+  $pc_chef_dir/chef purge  
+}
+
+help()
+{
+cat << EOF
+
+usage: $0 [options]
+
+A simple UI for the static site generator, Piecrust
+
+OPTIONS:
+
+  bake 		Bake your website
+  post		Create a new post
+  purge		Clear your blog's cache
+  edit [list]	With no further options, opens the latest post in text editor.
+		Add the "list" flag to choose another post to edit.
+
+EOF
+}
+
+case $1 in
+  bake)
+    bake
+    exit 0
+    ;;
+  post)
+    post
+    exit 0
+    ;;
+  purge)
+    purge
+    exit 0
+    ;;
+  edit)
+    edit $2
+    exit 0
+    ;;
+  *)
+    help
+    exit 1
+    ;;
+esac
+
+exit 0
