@@ -1,0 +1,15 @@
+#!/bin/bash
+
+domain=
+
+emailAddress=$(echo $(date "+%Y%m%d")-$[$RANDOM * $RANDOM]@$domain)
+
+cd /var/www/www.$domain/_content/pages
+
+sed s"/[0-9]*-[0-9]*.$domain/$emailAddress/g" contact.html > contact.html.tmp && rm -rf contact.html && mv contact.html.tmp contact.html
+
+echo $emailAddress > /var/www/00-default/emailAddress.txt
+
+cd /var/www/www.$domain
+
+../_piecrust/chef bake
