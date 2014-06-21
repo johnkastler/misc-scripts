@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""
+pulls some basic data for an opsworks user as imported from IAM
+"""
+
 from boto import connect_opsworks
 from keyring import get_password
 
